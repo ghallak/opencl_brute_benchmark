@@ -1,8 +1,10 @@
+
+
 /*
     Scrypt OpenCL Optimized kernel
     (c) C.B. and B. Kerler 2018-2019
     MIT License
-*/ 
+*/
 
 // [Lines 1 and 2 are for defining N and invMemoryDensity, and must be blank]
 
@@ -14,7 +16,7 @@ Follows the variable names of wikipedia's psuedocode:
     https://en.wikipedia.org/wiki/Scrypt#Algorithm
 Function/macro convention is F(output, input_1, input_2, ..), i.e. output first.
 Generally work with pointers.
- 
+
 === Design choices & reasoning =================================================
 
 > initial and final pbkdf2s are left to python for a few reasons:
@@ -89,7 +91,7 @@ Generally work with pointers.
 #define blockSize_bytes (128 * r)   // 1024
 #define ceilDiv(n,d) (((n) + (d) - 1) / (d))
 #define blockSize_int32 ceilDiv(blockSize_bytes, 4) // 256
-#define iterations (1 << N) 
+#define iterations (1 << N)
 
 // Useful struct for internal processing: a lump of 64 bytes (sort of an atomic unit)
 typedef struct {
@@ -282,7 +284,7 @@ typedef struct {
 
 // Function not a macro (see 'design choices' at the top)
 // Xors X onto lump then computes lump <- Salsa20/8(lump)
-__private void Xor_then_Salsa_20_8_InPlace(__private T_Lump64* lump, __private T_Lump64* X)
+void Xor_then_Salsa_20_8_InPlace(__private T_Lump64* lump, __private T_Lump64* X)
 {
     // Includes xoring here, to allow for unrolling (at expense of an extra param)
     xorLump64_unrolled(lump, X)
@@ -463,7 +465,7 @@ __private void Xor_then_Salsa_20_8_InPlace(__private T_Lump64* lump, __private T
 //   diff is such that jumble^diff(inp) is 'equally jumbled' as out
 //   diff will be pseudorandom, so case statement should maximise efficiency.
 // Now also recomputes V'[j] from V[j // density]
-void recover_and_xor_appropriately(__private T_Block* dest, __global T_Block* V, 
+void recover_and_xor_appropriately(__private T_Block* dest, __global T_Block* V,
         unsigned int j, unsigned int diff){
 
     // Number of computations to make.
@@ -562,7 +564,7 @@ void recover_and_xor_appropriately(__private T_Block* dest, __global T_Block* V,
 // ==================================================================================
 // The big one: ROMix kernel
 
-__kernel void ROMix( __global T_Block* blocksFlat,
+__kernel void ROMix(__global T_Block* blocksFlat,
                     __global T_HugeArray* hugeArraysFlat,
                     __global T_Block* outputsFlat
                     )
@@ -574,7 +576,7 @@ __kernel void ROMix( __global T_Block* blocksFlat,
     __global T_Block* outputBlock = &outputsFlat[id];
     __global T_Block* V = hugeArraysFlat[id].blk;
     __global T_Block* curr_V_blk = V;
-    
+
     // Copy our block into local X : could roll fully
     //   slightly weird to allow for Bjorn's bug-preventing-initialisation
     __private unsigned int _X_bytes[ceilDiv(sizeof(T_Block), 4)] = {0};
@@ -591,7 +593,7 @@ __kernel void ROMix( __global T_Block* blocksFlat,
     //      0         ||          V'[d*i]
     //      1         ||      J^3(V'[d*i])
     //      2         ||      J^2(V'[d*i])
-    //      3         ||      J^1(V'[d*i])    
+    //      3         ||      J^1(V'[d*i])
     // Now only storing the first in every invMemoryDensity
 
     #define maybeStore(curr_V_blk, X, _j)   \
@@ -673,7 +675,7 @@ __kernel void Salsa20(  __global T_Block* blocksFlat,
     // Initialise a zero lump
     unsigned int _z[ceilDiv(sizeof(T_Lump64), 4)] = {0};
     T_Lump64* zeroLump = (T_Lump64*)_z;
-    
+
     // Salsa each lump inPlace
     for (int j = 0; j < 2*r; j++)
     {

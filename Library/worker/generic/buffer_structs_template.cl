@@ -24,7 +24,7 @@
 #define saltBufferSize ceilDiv(<saltBufferSize_bytes>, wordSize)
 #define ctBufferSize ceilDiv(<ctBufferSize_bytes>, wordSize)
 
-// 
+//
 #define hashBlockSize_bytes ceilDiv(<hashBlockSize_bits>, 8) /* Needs to be a multiple of 4, or 8 when we work with unsigned longs */
 #define hashDigestSize_bytes ceilDiv(<hashDigestSize_bits>, 8)
 
@@ -39,7 +39,7 @@
     #define hashBlockSize_int32 hashBlockSize
     #define hashDigestSize_int32 hashDigestSize
     #define word unsigned int
-        
+
     unsigned int SWAP (unsigned int val)
     {
         return (rotate(((val) & 0x00FF00FF), 24U) | rotate(((val) & 0xFF00FF00), 8U));
@@ -52,12 +52,12 @@
     #define word unsigned long
     #define rotl64(a,n) (rotate ((a), (n)))
     #define rotr64(a,n) (rotate ((a), (64ul-n)))
-    
+
     unsigned long SWAP (const unsigned long val)
     {
         // ab cd ef gh -> gh ef cd ab using the 32 bit trick
         unsigned long tmp = (rotr64(val & 0x0000FFFF0000FFFFUL, 16UL) | rotl64(val & 0xFFFF0000FFFF0000UL, 16UL));
-        
+
         // Then see this as g- e- c- a- and -h -f -d -b to swap within the pairs,
         // gh ef cd ab -> hg fe dc ba
         return (rotr64(tmp & 0xFF00FF00FF00FF00UL, 8UL) | rotl64(tmp & 0x00FF00FF00FF00FFUL, 8UL));
