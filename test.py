@@ -54,13 +54,15 @@ def scrypt_test(scrypt_opencl_algos, passwords, N_value=15, r_value=3, p_value=1
 # ===========================================================================================
 
 def main(argv):
+    info = opencl_information()
     if (len(argv)<4):
         print("Implementation tests")
         print("-----------------------------------------------------------------")
-        info=opencl_information()
         info.printplatforms()
         print("\nPlease run as: python test.py [platform number] [number of passwords] [number of salts]")
         return
+
+    info. printfullinfo()
 
     passwords_count = int(argv[2])
     salts_count = int(argv[3])
