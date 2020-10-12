@@ -26,7 +26,7 @@ $ python test.py [platform number] [number of passwords] [number of salts]
 
 Examples
 ========
-Running on Linux Mint 20 with Intel(R) Core(TM) i5-3210M CPU @ 2.50GHz
+Running on Linux Mint 20 with Intel(R) Core(TM) i5-3210M CPU @ 2.50GHz:
 ```
 $ python test.py 0 4 2
 

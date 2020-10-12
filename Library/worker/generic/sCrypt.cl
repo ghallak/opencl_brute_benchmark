@@ -465,7 +465,7 @@ void Xor_then_Salsa_20_8_InPlace(__private T_Lump64* lump, __private T_Lump64* X
 //   diff is such that jumble^diff(inp) is 'equally jumbled' as out
 //   diff will be pseudorandom, so case statement should maximise efficiency.
 // Now also recomputes V'[j] from V[j // density]
-void recover_and_xor_appropriately(__private T_Block* dest, __global T_Block* V,
+void recover_and_xor_appropriately(__private T_Block* dest, __local T_Block* V,
         unsigned int j, unsigned int diff){
 
     // Number of computations to make.
@@ -478,16 +478,16 @@ void recover_and_xor_appropriately(__private T_Block* dest, __global T_Block* V,
         // Basically the old "xor_appropriately"
         switch(diff % 4){
             case 0:
-                xorBlock_halfrolled(__private, dest, __global, &V[V_index])
+                xorBlock_halfrolled(__private, dest, __local, &V[V_index])
                 break;
             case 1:
-                xor_J1(dest, __global, &V[V_index])
+                xor_J1(dest, __local, &V[V_index])
                 break;
             case 2:
-                xor_J2(dest, __global, &V[V_index])
+                xor_J2(dest, __local, &V[V_index])
                 break;
             case 3:
-                xor_J3(dest, __global, &V[V_index])
+                xor_J3(dest, __local, &V[V_index])
                 break;
         }
     }
@@ -498,7 +498,7 @@ void recover_and_xor_appropriately(__private T_Block* dest, __global T_Block* V,
         // Observe that this copy is pretty essential
         __private unsigned int _Y_bytes[ceilDiv(sizeof(T_Block), 4)] = {0};
         __private T_Block* Y = (T_Block*) _Y_bytes;
-        copyBlock_halfrolled(__private, Y, __global, &V[V_index])
+        copyBlock_halfrolled(__private, Y, __local, &V[V_index])
 
         // We have to decide where to enter the loop, based on how jumbled V[V_index] is
         //   i.e. (V_index * invMemoryDensity) % 4
@@ -565,7 +565,6 @@ void recover_and_xor_appropriately(__private T_Block* dest, __global T_Block* V,
 // The big one: ROMix kernel
 
 __kernel void ROMix(__global T_Block* blocksFlat,
-                    __global T_HugeArray* hugeArraysFlat,
                     __global T_Block* outputsFlat
                     )
 {
@@ -574,8 +573,10 @@ __kernel void ROMix(__global T_Block* blocksFlat,
     __private unsigned int id = get_global_id(0);
     __global T_Block* origBlock = &blocksFlat[id];
     __global T_Block* outputBlock = &outputsFlat[id];
-    __global T_Block* V = hugeArraysFlat[id].blk;
-    __global T_Block* curr_V_blk = V;
+
+    __local T_HugeArray hugeArray;
+    __local T_Block* V = hugeArray.blk;
+    __local T_Block* curr_V_blk = V;
 
     // Copy our block into local X : could roll fully
     //   slightly weird to allow for Bjorn's bug-preventing-initialisation
@@ -600,7 +601,7 @@ __kernel void ROMix(__global T_Block* blocksFlat,
     /* If due, stores X to curr_V_blk and increments it */  \
     {                                       \
         if ((_j) % invMemoryDensity == 0){  \
-            copyBlock_halfrolled(__global, curr_V_blk, __private, X);   \
+            copyBlock_halfrolled(__local, curr_V_blk, __private, X);   \
             curr_V_blk++;                   \
         }                                   \
     }
