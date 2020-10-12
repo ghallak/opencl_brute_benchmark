@@ -187,12 +187,18 @@ class opencl_interface:
         #   A. Before the loop we produce our huge buffers, once only.
         #   B. Also make our output buffers & numpys now, just once, to save work
         #     Note these will be atleast big enough throughout the loop: sometimes they'll have extra room.
+        largeBuffers = []
         outBuffers = []
         outNumpys = []
         outSizes = []
         for gangSize in takeInChunks(self.sworkgroupsize, maxGangSize):
             # Produce the large buffer for storing this gang's V arrays
             # No longer producing a big bytes object in Python
+
+            ## arr = np.frombuffer(bytes(gangSize * N_blocks_bytes), dtype=np.uint32)
+            ## Why is this read only?
+            arr_g = cl.Buffer(self.ctx, cl.mem_flags.READ_ONLY, size = gangSize * N_blocks_bytes)
+            largeBuffers.append(arr_g)
 
             # Produce the gang's output buffer and (small) numpy array to copy out to
             nBytes = BLOCK_LEN_BYTES * gangSize
@@ -234,7 +240,7 @@ class opencl_interface:
 
             ##print("Calling kernels..")
             #   3. (NON-BLOCKING) queue the kernel calls
-            for input_g, result_g, inCount in zip_longest(newInputs, outBuffers, inCounts):
+            for input_g, arr_g, result_g, inCount in zip_longest(newInputs, largeBuffers, outBuffers, inCounts):
                 if inCount > 0:
                     dim = (inCount,)
                     # print("inCount = {}".format(inCount))
@@ -243,7 +249,7 @@ class opencl_interface:
                     # print("arr_g.size = {}".format(arr_g.size))
                     # print("result_g.size = {}".format(result_g.size))
                     # print("\nOpenCL code now:\n")
-                    kernelCall(sprg, (self.queue, dim, None, input_g, result_g))
+                    kernelCall(sprg, (self.queue, dim, None, input_g, arr_g, result_g))
             ##print("Kernels running..")
 
             #   4. Process the outputs from the last round, yielding now (while the GPUs are busy)
