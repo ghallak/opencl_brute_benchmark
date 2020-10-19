@@ -52,7 +52,7 @@ class opencl_interface:
         self.sworkgroupsize = self.determineWorkgroupsize(N_value)
         self.inv_memory_density=inv_memory_density
         self.ctx = cl.Context(devices)
-        self.queue = cl.CommandQueue(self.ctx, devices[openclDevice])
+        self.queue = cl.CommandQueue(self.ctx, devices[openclDevice], properties=cl.command_queue_properties.PROFILING_ENABLE)
         self.debug=debug
 
         for device in devices:
@@ -291,7 +291,7 @@ class opencl_algos:
         # Initialise the openCL context & compile, with both debugging settings off
         debug = 0
         bufStructs = buffer_structs()
-        sprg=self.opencl_ctx.compile(bufStructs, "sCrypt.cl", None, N=N_value, invMemoryDensity=self.inv_memory_density)
+        sprg=self.opencl_ctx.compile(bufStructs, "scrypt.cl", None, N=N_value, invMemoryDensity=self.inv_memory_density)
         return [sprg,bufStructs]
 
     def cl_scrypt(self, ctx, passwords, N_value=15, r_value=3, p_value=1, desired_key_length=32,
@@ -316,7 +316,9 @@ class opencl_algos:
         # Our callback with the kernel name
         # Debugging: calls Salsa20
         def kernelCall(sprg, params):
-            return sprg.ROMix(*params)  # prg.ROMix(*params)
+            event = sprg.ROMix(*params)  # prg.ROMix(*params)
+            event.wait()
+            print("kernel time: {:.6f}".format((event.profile.end - event.profile.start) * 1e-9))
 
         # Derived key iter: yields p keys for each password
         passwordList = deque()
