@@ -136,13 +136,13 @@ void BlockMix(__private T_Block* B)
   copy64(B->buf, 60, Y.buf, 60);
 }
 
-__kernel void ROMix(__global T_Block* blocksFlat,
+__kernel void ROMix(__global T_Block* Xs,
                     __global T_Block* Vs,
-                    __global T_Block* outputsFlat
+                    __global T_Block* outputs
                    )
 {
   __private unsigned int id = get_global_id(0);
-  __private T_Block X = blocksFlat[id];
+  __private T_Block X = Xs[id];
   __private int i, j, k, v_idx;
 
   __private int v_idx_offset = id * iterations;
@@ -164,9 +164,9 @@ __kernel void ROMix(__global T_Block* blocksFlat,
     BlockMix(&X);
   }
 
-  __global T_Block* outputBlock = &outputsFlat[id];
+  __global T_Block* output = &outputs[id];
   for (i = 0; i < 64; ++i)
   {
-    outputBlock->buf[i] = X.buf[i];
+    output->buf[i] = X.buf[i];
   }
 }
