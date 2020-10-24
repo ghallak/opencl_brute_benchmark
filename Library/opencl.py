@@ -181,6 +181,8 @@ class opencl_interface:
         #   (seemingly anyway, why isn't it 2^31?)
         # note: this is NOT the workgroupsize, nor does it bound it
         maxGangSize = (1 << 29) // N_blocks_bytes
+        print("maxGangSize:", maxGangSize)
+        print("sworkgroupsize:", self.sworkgroupsize)
         assert maxGangSize > 0, "Uh-oh we couldn't fit a single core's V in a buffer."
 
 
