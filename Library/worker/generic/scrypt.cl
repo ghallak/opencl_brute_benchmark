@@ -39,6 +39,9 @@ typedef struct {
   uint4 buf[64];
 } T_Block;
 
+void salsa(__private const uint4 Bx[4], __private uint4 B[4]);
+void BlockMix(__private T_Block* B);
+
 void salsa(__private const uint4 Bx[4], __private uint4 B[4])
 {
   __private uint4 w[4];
