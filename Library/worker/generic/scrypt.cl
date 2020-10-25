@@ -1,5 +1,4 @@
 #define iterations 16384
-#define v_store 1
 
 #define reorder(B)                               \
 {                                                \
@@ -149,34 +148,21 @@ __kernel void ROMix(__global T_Block* Xs,
   __private T_Block X = Xs[id];
   __private int i, j, k, v_idx;
 
-  __private int v_idx_offset = id * (iterations / v_store);
+  __private int v_idx_offset = id * iterations;
 
-  for (i = 0, v_idx = v_idx_offset; i < iterations; ++i)
+  for (i = 0, v_idx = v_idx_offset; i < iterations; ++i, ++v_idx)
   {
-    if (!(i % v_store))
-    {
-      Vs[v_idx] = X;
-      ++v_idx;
-    }
+    Vs[v_idx] = X;
     BlockMix(&X);
   }
 
-  __private T_Block V;
   for (i = 0; i < iterations; ++i)
   {
     j = X.buf[60].x & (iterations - 1);
-    v_idx = v_idx_offset + (j / v_store);
-    V = Vs[v_idx];
-    if (j % v_store)
-    {
-      for (k = j % v_store; k > 0; --k)
-      {
-        BlockMix(&V);
-      }
-    }
+    v_idx = v_idx_offset + j;
     for (k = 0; k < 64; ++k)
     {
-      X.buf[k] ^= V.buf[k];
+      X.buf[k] ^= Vs[v_idx].buf[k];
     }
     BlockMix(&X);
   }
