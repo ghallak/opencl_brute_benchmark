@@ -75,7 +75,7 @@ def main(argv):
     print("%d random passwords and salts were generated in: %.6f\n" % ((passwords_count + salts_count), (t1-t0)))
 
     platform = int(argv[1])
-    debug = 0
+    debug = 1
     write_combined_file = False
     opencl_algos = opencl.opencl_algos(platform, debug, write_combined_file,inv_memory_density=1)
     # Call the tests
